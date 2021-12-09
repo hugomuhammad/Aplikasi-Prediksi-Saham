@@ -2,7 +2,6 @@ import streamlit as st
 import tensorflow as tf
 from apps import data as data
 from sklearn import datasets
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split

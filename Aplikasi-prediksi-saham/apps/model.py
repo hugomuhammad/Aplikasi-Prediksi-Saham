@@ -1,5 +1,4 @@
 import streamlit as st
-import tensorflow as tf
 from apps import data as data
 from sklearn import datasets
 import pandas as pd
@@ -7,7 +6,6 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import classification_report
-from tensorflow.keras.models import Sequential, save_model, load_model
 
 def app():
 
@@ -28,20 +26,16 @@ def app():
 
     
     #fungsi hasil prediksi model
-    def get_result(model, input, reference):
-        obj = sc.fit(reference.reshape(-1,1))
+    def get_result(model, input):
         model = model
         prediction = model.predict(input)
-        prediction = obj.inverse_transform(prediction)
         return prediction
 
         
     #Proses
-
     st.write(' ### Input harga open, high, low saham hari ini')
     
     #data untuk referensi inverse transform normalisasi
-    X = df[['Open','High','Low']].values
     y = df['Close'].values
     
     #membuat model
@@ -58,22 +52,11 @@ def app():
 
 
     #menyesuaikan format data untuk diinput 
-    data_input = np.array([[[data_open]],
-                            [[data_high]],
-                            [[data_low]]])
-
-    #menormalisasi data
-    c = X[int(len(X)*0.8):].tolist()
-    input = [data_open, data_high, data_low]
-    c.append(input)
-
-    c = np.array(c)
-    new_model = sc.fit_transform(c)
-    data_input = new_model[-1]
+    data_input = np.array([[data_open, data_high, data_low]])
     
     #melakukan prediksi
     if data_low != 0:
-        hasil_prediksi = get_result(model, data_input.reshape(1,3,1), y[int(len(y)*0.8):])
+        hasil_prediksi = get_result(model, data_input)
     else:
         pass
     
@@ -82,32 +65,39 @@ def app():
 
     #menampilkan hasil prediksi
     if data_low != 0:
-        if hasil_prediksi[0][0] > y[len(y)-1]:
+        if hasil_prediksi[0] > y[len(y)-1]:
 
+            price = hasil_prediksi[0]
+            price_format = '{:,.2f}'.format(price)
 
-            st.write('Harga closed saham hari ini adalah Rp. ' + str(hasil_prediksi[0][0]))
+            st.write('Harga closed saham hari ini adalah Rp. ' + price_format)
 
-            a_number = abs((hasil_prediksi[0][0] - y[len(y)-1])/y[len(y)-1])
+            a_number = abs((hasil_prediksi[0] - y[len(y)-1])/y[len(y)-1])
             percentage = "{:.2%}".format(a_number)
 
-            st.write('Harga closed saham hari ini naik sebesar ' + percentage)
+            st.write('Harga closed saham hari ini naik sebesar ' + percentage + ' dari harga saham terakhir')
 
             new_title = '<p style="font-family:sans-serif; color:Green; font-size: 20px;"> Naik </p>'
             st.write(new_title, unsafe_allow_html=True)
 
 
         else:
-            
-            st.write('Harga closed saham hari ini adalah Rp. ' + str(hasil_prediksi[0][0]))
 
-            a_number = abs((hasil_prediksi[0][0] - y[len(y)-1])/y[len(y)-1])
+            price = hasil_prediksi[0]
+            price_format = '{:,.2f}'.format(price)
+            
+            st.write('Harga closed saham hari ini adalah Rp. ' + price_format)
+
+            a_number = abs((hasil_prediksi[0] - y[len(y)-1])/y[len(y)-1])
             percentage = "{:.2%}".format(a_number)
 
-            st.write('Harga closed saham hari ini turun sebesar ' + percentage )
+            st.write('Harga closed saham hari ini turun sebesar ' + percentage + ' dari harga saham terakhir')
 
             new_title = '<p style="font-family:sans-serif; color:Red; font-size: 20px;"> Turun </p>'
             st.write(new_title, unsafe_allow_html=True)
     
     else:
         st.write('Tidak ada data untuk prediksi')
+
+
 
